@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createVehicle, Vehicle } from '../../src/engine/Vehicle';
+import { createVehicle } from '../../src/engine/Vehicle';
 
 describe('Vehicle', () => {
   it('creates a vehicle with given properties', () => {

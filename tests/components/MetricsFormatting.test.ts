@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeAllMetrics,
-  computeFlow,
   computeDensity,
-  computeAverageSpeed,
 } from '../../src/engine/metrics';
 import { createVehicle } from '../../src/engine/Vehicle';
 

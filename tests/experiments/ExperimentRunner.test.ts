@@ -109,7 +109,7 @@ describe('ExperimentRunner — Headless Simulation & Parameter Sweeps', () => {
   });
 
   it('supports cancellation cleanly during an ongoing sweep', () => {
-    let cancelAfter = 2; // Cancel after 2 trials
+    const cancelAfter = 2; // Cancel after 2 trials
     let executed = 0;
 
     const results = ExperimentRunner.runDensitySweep(

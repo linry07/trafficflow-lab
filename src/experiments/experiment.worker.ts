@@ -44,10 +44,11 @@ self.onmessage = (event: MessageEvent<WorkerInMessage>) => {
       );
 
       self.postMessage({ type: 'COMPLETE', payload: results } as WorkerOutMessage);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       self.postMessage({
         type: 'ERROR',
-        payload: err?.message || 'Unknown experiment worker error',
+        payload: message || 'Unknown experiment worker error',
       } as WorkerOutMessage);
     }
   }

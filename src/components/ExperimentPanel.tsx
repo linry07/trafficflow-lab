@@ -692,9 +692,24 @@ const ConfigField: React.FC<{
   </div>
 );
 
-const ProbabilityTooltip: React.FC<any> = ({ active, payload, label }) => {
+interface TooltipPayloadItem {
+  name?: string;
+  value?: number | string;
+  unit?: string;
+  color?: string;
+  payload?: Record<string, unknown>;
+}
+
+interface CustomChartTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string | number;
+}
+
+const ProbabilityTooltip: React.FC<CustomChartTooltipProps> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
+    const data = payload[0].payload as { vehicles?: number; probability?: number; jamTrials?: string; ciLower?: number; ciUpper?: number } | undefined;
+    if (!data) return null;
     return (
       <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid #334155', borderRadius: '6px', padding: '8px 10px', fontSize: '11px', color: '#f8fafc' }}>
         <div>Density: <strong>{label} veh/km</strong> ({data.vehicles} cars)</div>
@@ -710,12 +725,12 @@ const ProbabilityTooltip: React.FC<any> = ({ active, payload, label }) => {
   return null;
 };
 
-const FundamentalTooltip: React.FC<any> = ({ active, payload, label }) => {
+const FundamentalTooltip: React.FC<CustomChartTooltipProps> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid #334155', borderRadius: '6px', padding: '8px 10px', fontSize: '11px', color: '#f8fafc' }}>
         <div>Density: <strong>{label} veh/km</strong></div>
-        {payload.map((item: any) => (
+        {payload.map((item) => (
           <div key={item.name} style={{ color: item.color, fontWeight: 600 }}>
             {item.name}: {item.value} {item.unit}
           </div>

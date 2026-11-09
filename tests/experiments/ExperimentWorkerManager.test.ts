@@ -1,16 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  ExperimentWorkerManager,
-  ExperimentWorkerCallbacks,
-} from '../../src/experiments/ExperimentWorkerManager';
+import { ExperimentWorkerManager } from '../../src/experiments/ExperimentWorkerManager';
+import { DensitySweepResults } from '../../src/experiments/ExperimentRunner';
 
 class MockWorker {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: ErrorEvent) => void) | null = null;
   terminated = false;
-  postedMessages: any[] = [];
+  postedMessages: unknown[] = [];
 
-  postMessage(message: any) {
+  postMessage(message: unknown) {
     this.postedMessages.push(message);
   }
 
@@ -18,7 +16,7 @@ class MockWorker {
     this.terminated = true;
   }
 
-  simulateMessage(data: any) {
+  simulateMessage(data: unknown) {
     if (!this.terminated && this.onmessage) {
       this.onmessage({ data } as MessageEvent);
     }
@@ -146,8 +144,20 @@ describe('ExperimentWorkerManager — Cancellation, Generational Isolation & Res
     expect(manager.isRunning()).toBe(true);
 
     // Run 2 completes
-    const mockPayload = {
-      config: {} as any,
+    const mockPayload: DensitySweepResults = {
+      config: {
+        minVehicles: 10,
+        maxVehicles: 30,
+        stepVehicles: 10,
+        trialsPerCount: 5,
+        duration: 30,
+        warmupDuration: 10,
+        roadLength: 1000,
+        vehicleLength: 5,
+        idm: { v0: 33.3, s0: 2, T: 1.5, a: 1, b: 3, delta: 4 },
+        dt: 0.05,
+        perturbation: null,
+      },
       groups: [],
       totalTrialsCompleted: 10,
       estimatedTransitionWindow: null,

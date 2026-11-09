@@ -93,9 +93,10 @@ export class ExperimentWorkerManager {
       };
 
       worker.postMessage({ type: 'START', config } as WorkerInMessage);
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.cleanupWorker(null);
-      callbacks.onError(err?.message || 'Failed to spawn background experiment worker');
+      const message = err instanceof Error ? err.message : String(err);
+      callbacks.onError(message || 'Failed to spawn background experiment worker');
     }
   }
 

@@ -7,7 +7,7 @@ import {
   computeCongestionFraction,
   computeAllMetrics,
 } from '../../src/engine/metrics';
-import { createVehicle, Vehicle } from '../../src/engine/Vehicle';
+import { createVehicle } from '../../src/engine/Vehicle';
 
 describe('metrics — computeAverageSpeed', () => {
   it('returns 0 for empty array', () => {

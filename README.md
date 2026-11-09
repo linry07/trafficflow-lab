@@ -196,7 +196,7 @@ Explore parameter configurations directly using the **Scenario Presets** dropdow
 ### Installation
 ```bash
 # Clone repository
-git clone https://github.com/ryanlin07/trafficflow-lab.git
+git clone https://github.com/linry07/trafficflow-lab.git
 cd trafficflow-lab
 
 # Install dependencies

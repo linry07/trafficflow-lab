@@ -190,7 +190,7 @@ export const ChartsPanel: React.FC<ChartsPanelProps> = ({
             height={activeTab === 'all' ? 220 : 300}
           >
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data as any} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+              <LineChart data={data as unknown as Array<Record<string, unknown>>} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis
                   dataKey="time"
@@ -239,7 +239,7 @@ export const ChartsPanel: React.FC<ChartsPanelProps> = ({
             height={activeTab === 'all' ? 220 : 300}
           >
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data as any} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+              <LineChart data={data as unknown as Array<Record<string, unknown>>} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis
                   dataKey="time"
@@ -280,7 +280,7 @@ export const ChartsPanel: React.FC<ChartsPanelProps> = ({
             height={activeTab === 'all' ? 220 : 300}
           >
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data as any} margin={{ top: 10, right: 10, left: -5, bottom: 0 }}>
+              <LineChart data={data as unknown as Array<Record<string, unknown>>} margin={{ top: 10, right: 10, left: -5, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis
                   dataKey="time"
@@ -397,7 +397,7 @@ const TabButton: React.FC<{
 
 const CustomTooltip: React.FC<{
   active?: boolean;
-  payload?: any[];
+  payload?: Array<{ value?: number | string }>;
   label?: number;
   unit: string;
   labelName: string;

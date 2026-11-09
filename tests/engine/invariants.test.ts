@@ -3,7 +3,6 @@ import { Simulation } from '../../src/engine/Simulation';
 import {
   SimulationConfig,
   DEFAULT_CONFIG,
-  DEFAULT_IDM_PARAMS,
   PRESET_STABLE,
   PRESET_UNSTABLE,
 } from '../../src/engine/SimulationConfig';
