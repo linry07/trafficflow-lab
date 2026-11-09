@@ -1,5 +1,8 @@
 /**
  * useExperiment — React hook managing background Web Worker simulation sweeps.
+ *
+ * Utilises ExperimentWorkerManager to ensure immediate thread termination on cancellation,
+ * rejection of stale messages, and clean worker recreation.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -8,7 +11,7 @@ import {
   DensityExperimentResults,
   ExperimentProgress,
 } from '../experiments/ExperimentRunner';
-import { WorkerInMessage, WorkerOutMessage } from '../experiments/experiment.worker';
+import { ExperimentWorkerManager } from '../experiments/ExperimentWorkerManager';
 
 export interface UseExperimentReturn {
   isRunning: boolean;
@@ -26,74 +29,52 @@ export function useExperiment(): UseExperimentReturn {
   const [results, setResults] = useState<DensityExperimentResults | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const workerRef = useRef<Worker | null>(null);
+  const managerRef = useRef<ExperimentWorkerManager | null>(null);
+
+  // Lazy-initialize worker manager
+  if (!managerRef.current) {
+    managerRef.current = new ExperimentWorkerManager();
+  }
 
   // Terminate worker on component unmount
   useEffect(() => {
+    const manager = managerRef.current;
     return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
+      if (manager) {
+        manager.dispose();
       }
     };
   }, []);
 
   const cancelExperiment = useCallback(() => {
-    if (workerRef.current && isRunning) {
-      workerRef.current.postMessage({ type: 'CANCEL' } as WorkerInMessage);
-      setIsRunning(false);
+    if (managerRef.current) {
+      managerRef.current.cancel({
+        onCancel: () => {
+          setIsRunning(false);
+          setProgress(null);
+        },
+      });
     }
-  }, [isRunning]);
+  }, []);
 
   const startExperiment = useCallback(
     (config: DensityExperimentConfig) => {
-      // Terminate any existing worker
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
-
       setError(null);
       setProgress(null);
       setIsRunning(true);
 
-      try {
-        // Instantiate modern Vite module worker
-        const worker = new Worker(
-          new URL('../experiments/experiment.worker.ts', import.meta.url),
-          { type: 'module' },
-        );
-        workerRef.current = worker;
-
-        worker.onmessage = (event: MessageEvent<WorkerOutMessage>) => {
-          const msg = event.data;
-
-          if (msg.type === 'PROGRESS') {
-            setProgress(msg.payload);
-          } else if (msg.type === 'COMPLETE') {
-            setResults(msg.payload);
+      if (managerRef.current) {
+        managerRef.current.start(config, {
+          onProgress: (prog) => setProgress(prog),
+          onComplete: (res) => {
+            setResults(res);
             setIsRunning(false);
-            worker.terminate();
-            workerRef.current = null;
-          } else if (msg.type === 'ERROR') {
-            setError(msg.payload);
+          },
+          onError: (err) => {
+            setError(err);
             setIsRunning(false);
-            worker.terminate();
-            workerRef.current = null;
-          }
-        };
-
-        worker.onerror = (err) => {
-          setError(err.message || 'Worker thread execution error');
-          setIsRunning(false);
-          worker.terminate();
-          workerRef.current = null;
-        };
-
-        worker.postMessage({ type: 'START', config } as WorkerInMessage);
-      } catch (err: any) {
-        setError(err?.message || 'Failed to spawn background experiment worker');
-        setIsRunning(false);
+          },
+        });
       }
     },
     [],

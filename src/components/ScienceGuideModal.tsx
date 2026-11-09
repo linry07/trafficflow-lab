@@ -354,11 +354,11 @@ export const ScienceGuideModal: React.FC<ScienceGuideModalProps> = ({
           {activeSection === 'interventions' && (
             <div>
               <h3 style={{ margin: '0 0 12px 0', color: '#f8fafc', fontSize: '16px' }}>
-                Engineering &amp; Policy Interventions
+                Scenario Analysis &amp; Modeling Reference
               </h3>
               <p>
-                How do traffic engineers prevent phantom jams without constructing additional lanes?
-                Test these interventions directly in <strong>TrafficFlow Lab</strong> using the Scenario Presets menu:
+                How do parameter variations affect string stability and flow in this microscopic IDM simulation?
+                Explore these reference scenarios using the Scenario Presets menu:
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '14px 0' }}>
@@ -371,12 +371,16 @@ export const ScienceGuideModal: React.FC<ScienceGuideModalProps> = ({
                   }}
                 >
                   <div style={{ fontWeight: 700, color: '#fbbf24', marginBottom: '4px' }}>
-                    🟡 Variable Speed Limits (VSL): Lowering v₀ at High Density
+                    🟡 Reduced Speed Limit Scenario (Static v₀ = 80 km/h)
                   </div>
                   <p style={{ margin: 0, fontSize: '12px', color: '#cbd5e1' }}>
-                    Counter-intuitively, reducing the highway speed limit from 120 km/h to 80 km/h when density reaches 35 veh/km
-                    <strong> prevents traffic jams from forming</strong>. Because desired gap is s* = s₀ + v·T, a lower speed
-                    significantly shortens required headway and eliminates emergency over-braking, smoothing the flow and preserving capacity.
+                    In this model, reducing desired speed from 120 km/h to 80 km/h at 35 veh/km prevents stop-and-go waves
+                    because the required dynamic gap is s*(v, Δv) = s₀ + v·T. Lowering v significantly shortens the gap required
+                    at equilibrium, keeping vehicles out of the non-linear braking regime.
+                  </p>
+                  <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>
+                    <em>Model Note:</em> This preset simulates a static lower cruising speed across the highway. It does not implement
+                    an active, closed-loop feedback-controlled Variable Speed Limit (VSL) system. Real-world driver compliance and speed-dependent headway adjustments may differ.
                   </p>
                 </div>
 
@@ -389,12 +393,33 @@ export const ScienceGuideModal: React.FC<ScienceGuideModalProps> = ({
                   }}
                 >
                   <div style={{ fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>
-                    🤖 Connected &amp; Autonomous Vehicles (CAV Platooning)
+                    🤖 Idealized Low-Headway Following (T = 0.8s)
                   </div>
                   <p style={{ margin: 0, fontSize: '12px', color: '#cbd5e1' }}>
-                    Autonomous vehicles communicate via V2V (Vehicle-to-Vehicle) and have near-zero electronic reaction delay.
-                    Setting safe headway to T = 0.8s allows 35–45 vehicles to travel at full highway speed without string instability,
-                    effectively doubling roadway capacity without adding asphalt.
+                    Setting time headway to T = 0.8s and standstill gap to 1.5m allows 35 vehicles to maintain laminar flow at 120 km/h
+                    because spacing requirements are halved compared to human baseline (T = 1.5s).
+                  </p>
+                  <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>
+                    <em>Model Note:</em> This explores the mathematical consequence of low headway in the single-leader IDM.
+                    It does <strong>not</strong> implement wireless Vehicle-to-Vehicle (V2V) communication, multi-vehicle anticipation,
+                    or Cooperative Adaptive Cruise Control (CACC). In real physical systems, operating at T &lt; 1.0s without V2V feedforward acceleration broadcast can induce string instability.
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    background: '#131c2e',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    padding: '14px',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: '#f87171', marginBottom: '4px' }}>
+                    ⚡ Baseline Assumption: Homogeneous Driver Population
+                  </div>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#cbd5e1' }}>
+                    All vehicles in the baseline simulation share identical IDM parameters (v₀, T, a, b, s₀). The platform investigates
+                    how collective non-linear instability arises purely from topological density and geometry, even when all drivers follow identical deterministic rules.
                   </p>
                 </div>
               </div>

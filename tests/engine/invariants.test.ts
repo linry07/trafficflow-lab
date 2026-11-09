@@ -41,6 +41,18 @@ function assertInvariantsForConfig(
     // Invariant: vehicle count conservation
     expect(n).toBe(config.vehicleCount);
 
+    // Invariant: cyclic vehicle identity order preservation (no overtaking on single-lane road)
+    if (n > 1) {
+      const idx0 = state.vehicles.findIndex((v) => v.id === 0);
+      expect(idx0).toBeGreaterThanOrEqual(0);
+      for (let k = 0; k < n; k++) {
+        expect(state.vehicles[(idx0 + k) % n].id).toBe(
+          k,
+          `[${label}] step ${step}: Overtaking detected! Cyclic order broken at offset ${k}`,
+        );
+      }
+    }
+
     for (let i = 0; i < n; i++) {
       const v = state.vehicles[i];
 

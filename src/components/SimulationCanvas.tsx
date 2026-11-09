@@ -8,7 +8,7 @@
  *   - Subtle status overlays for paused state and perturbation cues
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Vehicle } from '../engine/Vehicle';
 import { RoadRenderer } from '../visualization/RoadRenderer';
 import { VehicleRenderer } from '../visualization/VehicleRenderer';
@@ -30,6 +30,33 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+
+  // Monitor container size changes even when paused
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      const rect = container.getBoundingClientRect();
+      const w = Math.max(300, Math.floor(rect.width));
+      const h = Math.max(300, Math.floor(rect.height));
+      setDimensions(prev => (prev.width === w && prev.height === h ? prev : { width: w, height: h }));
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => {
+        updateSize();
+      });
+      observer.observe(container);
+      return () => observer.disconnect();
+    } else {
+      window.addEventListener('resize', updateSize);
+      return () => window.removeEventListener('resize', updateSize);
+    }
+  }, []);
 
   // Render on every state update or resize
   useEffect(() => {
@@ -42,8 +69,8 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
 
     // Responsive dimensions
     const rect = container.getBoundingClientRect();
-    const width = Math.max(300, Math.floor(rect.width));
-    const height = Math.max(300, Math.floor(rect.height));
+    const width = dimensions.width || Math.max(300, Math.floor(rect.width));
+    const height = dimensions.height || Math.max(300, Math.floor(rect.height));
 
     const dpr = window.devicePixelRatio || 1;
     if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
@@ -93,7 +120,7 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
     renderCenterHub(ctx, cx, cy, vehicles.length, roadLength);
 
     ctx.restore();
-  }, [vehicles, roadLength, v0, isRunning, highlightedVehicleId]);
+  }, [vehicles, roadLength, v0, isRunning, highlightedVehicleId, dimensions]);
 
   return (
     <div

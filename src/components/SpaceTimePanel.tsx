@@ -28,6 +28,33 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mode, setMode] = useState<SpaceTimeViewMode>('trajectories');
+  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+
+  // Monitor container size changes even when simulation is paused
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      const rect = container.getBoundingClientRect();
+      const w = Math.max(300, Math.floor(rect.width));
+      const h = Math.max(260, Math.floor(rect.height));
+      setDimensions(prev => (prev.width === w && prev.height === h ? prev : { width: w, height: h }));
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => {
+        updateSize();
+      });
+      observer.observe(container);
+      return () => observer.disconnect();
+    } else {
+      window.addEventListener('resize', updateSize);
+      return () => window.removeEventListener('resize', updateSize);
+    }
+  }, []);
 
   // Draw space-time plot on state updates and resize
   useEffect(() => {
@@ -39,8 +66,8 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
     if (!ctx) return;
 
     const rect = container.getBoundingClientRect();
-    const width = Math.max(300, Math.floor(rect.width));
-    const height = Math.max(260, Math.floor(rect.height));
+    const width = dimensions.width || Math.max(300, Math.floor(rect.width));
+    const height = dimensions.height || Math.max(260, Math.floor(rect.height));
 
     const dpr = window.devicePixelRatio || 1;
     if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
@@ -60,7 +87,7 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
     });
 
     ctx.restore();
-  }, [slices, roadLength, v0, mode]);
+  }, [slices, roadLength, v0, mode, dimensions]);
 
   return (
     <div

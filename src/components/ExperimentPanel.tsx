@@ -405,7 +405,7 @@ export const ExperimentPanel: React.FC<ExperimentPanelProps> = ({
                 )}
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                Confidence intervals calculated via 95% Wilson Score formulation across {results.config.trialsPerCount} independent random seeds per density level.
+                Confidence intervals calculated via 95% Wilson Score formulation across {results.config.trialsPerCount} micro-perturbation seeds per density level (Common Random Numbers design).
               </div>
             </div>
 

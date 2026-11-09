@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb?logo=react)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)](https://vitejs.dev/)
-[![Vitest](https://img.shields.io/badge/Tests-176%20Passing-brightgreen?logo=vitest)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-185%20Passing-brightgreen?logo=vitest)](https://vitest.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
@@ -132,13 +132,16 @@ src/
 1. **Zero-React Physics Engine:** The simulation engine has zero DOM or React dependencies. Headless simulation steps execute in pure memory at $> 4,300\times$ faster than real time ($35$ trials of $240\text{s}$ simulated time run in under $2\text{ seconds}$).
 2. **Deterministic Reproducibility:** Mulberry32 32-bit PRNG guarantees that every run with the same seed and parameters produces bit-for-bit identical results across machines and environments.
 3. **Decoupled Simulation & Animation Loop:** Integration uses a fixed $\Delta t = 0.05\text{s}$ ($20\text{ Hz}$) semi-implicit Euler scheme driven by a `requestAnimationFrame` accumulator with tab-unfocus delta clamping ($\le 0.25\text{s}$) and step caps ($\le 20\text{ steps/frame}$).
-4. **4-Regime Congestion Detection:** Distinguishes between `free-flow`, `transient-disturbance`, `uniformly-slow`, and `sustained-jam` by enforcing:
+4. **4-Regime Congestion Detection with Debounced Hysteresis:** Distinguishes between `free-flow`, `transient-disturbance`, `uniformly-slow`, and `sustained-jam` by enforcing:
    - $120\text{s}$ warm-up exclusion (eliminates transient initialization artifacts).
    - Speed drop below $30\% v_0$ ($< 36\text{ km/h}$).
-   - Persistence for $\ge 60$ contiguous simulated seconds.
+   - Persistence for $\ge 60$ contiguous simulated seconds with a $3.0\text{s}$ debounce grace period to avoid spurious resets during periodic wave oscillations.
    - Significant speed variance ($\sigma_v^2 \ge 3.0\text{ m}^2/\text{s}^2$) to distinguish stop-and-go waves from uniformly slow traffic.
-5. **Statistical Rigor with Wilson Score Confidence Intervals:** Small-sample binomial proportions avoid inaccurate normal approximations ($p \pm 1.96 \sqrt{p(1-p)/n}$) by employing the asymmetric Wilson Score formulation:
-   $$w_{\pm} = \frac{p + \frac{z^2}{2n} \pm z \sqrt{\frac{p(1-p)}{n} + \frac{z^2}{4n^2}}}{1 + \frac{z^2}{n}}$$
+5. **Statistical Rigor with Wilson Score Confidence Intervals & Common Random Numbers:**
+   - Small-sample binomial proportions avoid inaccurate normal approximations ($p \pm 1.96 \sqrt{p(1-p)/n}$) by employing the asymmetric Wilson Score formulation:
+     $$w_{\pm} = \frac{p + \frac{z^2}{2n} \pm z \sqrt{\frac{p(1-p)}{n} + \frac{z^2}{4n^2}}}{1 + \frac{z^2}{n}}$$
+   - In deterministic simulations, the Wilson CI quantifies sampling uncertainty across independent micro-perturbation seeds (representing variations in initial vehicle spacings and driver speed perturbations).
+   - Multi-density sweeps employ the **Common Random Numbers (CRN)** variance-reduction technique: the identical sequence of random seeds is reused across all density levels, guaranteeing that differences in jam probabilities arise strictly from density rather than seed selection.
 6. **One-Click Scenario Replay:** Every trial evaluated in the headless Web Worker can be immediately loaded into the circular highway and space-time visualizer for exact, synchronous visual inspection.
 7. **Production Data Export:** Full export capabilities allowing users to download CSV or JSON files of individual trials, density summary statistics, and active simulation time-series for external analysis in Python, R, or Excel.
 
@@ -164,18 +167,23 @@ Running the **Automatic Experiment Discovery Engine** across 35 independent tria
 
 ---
 
-## 🎮 Pre-Packaged Scenarios & Policy Interventions
+## 🎮 Scenario Presets & Modeling Analysis
 
-Test real-world traffic engineering interventions directly using the **Scenario Presets** dropdown:
+Explore parameter configurations directly using the **Scenario Presets** dropdown.
 
-1. **🟢 Stable Baseline ($15\text{ cars}$):** Sparse traffic where perturbations smoothly dissipate.
-2. **🔴 Unstable Baseline ($40\text{ cars}$):** Heavy traffic where small disturbances amplify into persistent backward stop-and-go waves.
-3. **🟡 Variable Speed Limit Intervention ($35\text{ cars}$, $v_0 = 80\text{ km/h}$):** 
-   - *Traffic Engineering Insight:* Lowering the speed limit from $120\text{ km/h}$ to $80\text{ km/h}$ reduces the required headway distance ($s^* = s_0 + v T$), stabilizing string dynamics and **eliminating traffic jams without reducing vehicle count**.
-4. **🤖 Connected / Autonomous Vehicle (CAV) Platoon ($35\text{ cars}$, $T = 0.8\text{s}$):**
-   - *Autonomous Vehicle Insight:* Near-zero electronic reaction times allow automated vehicles to maintain tight, uniform headway, unlocking high throughput without instability.
+> [!NOTE]
+> All presets model **homogeneous IDM fleets** on a closed $1000\text{m}$ ring (every vehicle follows standard single-leader IDM equations with identical parameters). They demonstrate fundamental car-following mechanics rather than heterogeneous traffic, dynamic closed-loop infrastructure, or multi-vehicle communications.
+
+1. **🟢 Stable Baseline ($15\text{ cars}$):** Sparse traffic ($\rho = 15\text{ veh/km}$, headway $66.7\text{m}$) where local decelerations smoothly dissipate.
+2. **🔴 Unstable Baseline ($40\text{ cars}$):** Heavy traffic ($\rho = 40\text{ veh/km}$, headway $25.0\text{m}$) where small disturbances amplify into persistent backward stop-and-go waves.
+3. **🟡 Reduced Speed Limit Scenario (Static $v_0 = 80\text{ km/h}$, $35\text{ cars}$):**
+   - *Physical Insight:* Lowering desired cruising speed reduces the IDM desired headway distance ($s^* = s_0 + v T$), stabilizing string dynamics and dampening stop-and-go waves without altering vehicle count.
+   - *Engineering Scope:* This scenario models a uniform static speed reduction, not a dynamic closed-loop Variable Speed Limit (VSL) feedback system.
+4. **🤖 Idealized Low Headway ($T = 0.8\text{s}$, $35\text{ cars}$):**
+   - *Physical Insight:* Simulates idealized fast-reacting automated longitudinal control by reducing IDM time headway from $1.5\text{s}$ to $0.8\text{s}$, permitting stable traffic at higher velocities ($\approx 99\text{ km/h}$) on the closed ring.
+   - *Engineering Scope:* Uses standard single-leader IDM car-following without Vehicle-to-Vehicle (V2V), Cooperative Adaptive Cruise Control (CACC), or multi-vehicle lookahead.
 5. **⚡ Aggressive / Tailgating ($30\text{ cars}$, $v_0 = 140\text{ km/h}$, $T = 0.7\text{s}$, $s_0 = 1.0\text{m}$):**
-   - *Human Factors Insight:* Tailgating combined with high speed leads to violent, rapid shockwave formation even at moderate densities.
+   - *Human Factors Insight:* Reduced safety margins ($s_0 = 1.0\text{m}$) and tight headway combined with high speed lead to sudden, severe deceleration shockwaves upon disturbance.
 
 ---
 
@@ -202,7 +210,7 @@ npm run dev
 Open your browser at `http://localhost:5173` to interact with the simulation.
 
 ### Running Test Suite
-TrafficFlow Lab includes **176 comprehensive unit and integration tests** validating numerical integration, physics invariants, collision avoidance, and statistical estimators:
+TrafficFlow Lab includes **185 comprehensive unit and integration tests** validating numerical integration, physics invariants, collision avoidance, and statistical estimators:
 ```bash
 npm test
 ```

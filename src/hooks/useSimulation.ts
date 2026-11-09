@@ -156,10 +156,19 @@ export function useSimulation(
     spaceTimeGridRef.current.record(time, currentState.vehicles);
   }, []);
 
+  const lastAnalyticsUpdateRef = useRef<number>(0);
+
   const handleRender = useCallback(() => {
     setState(simRef.current.getState());
-    setTimeSeriesData([...collectorRef.current.getPoints()]);
-    setSpaceTimeSlices([...spaceTimeGridRef.current.getSlices()]);
+
+    const now = performance.now();
+    // Throttle React state updates for heavy charts to 4Hz (every 250ms)
+    // while keeping 60Hz canvas rendering completely fluid
+    if (now - lastAnalyticsUpdateRef.current >= 250) {
+      setTimeSeriesData([...collectorRef.current.getPoints()]);
+      setSpaceTimeSlices([...spaceTimeGridRef.current.getSlices()]);
+      lastAnalyticsUpdateRef.current = now;
+    }
   }, []);
 
   useAnimationLoop({

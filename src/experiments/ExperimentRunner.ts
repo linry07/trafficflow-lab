@@ -7,6 +7,7 @@
 
 import { Simulation } from '../engine/Simulation';
 import { SimulationConfig } from '../engine/SimulationConfig';
+import { Vehicle } from '../engine/Vehicle';
 import { TrafficMetrics } from '../engine/metrics';
 import { CongestionDetector, TrafficRegime } from '../analytics/CongestionDetector';
 import {
@@ -53,6 +54,8 @@ export interface TrialResult {
   duration: number;
   simulationConfig: SimulationConfig;
   perturbation: PerturbationSchedule | null;
+  /** Terminal vehicle snapshots at the completion of the trial */
+  finalVehicles?: ReadonlyArray<Vehicle>;
 }
 
 export interface DensityGroupResult {
@@ -194,6 +197,7 @@ export class ExperimentRunner {
       duration,
       simulationConfig,
       perturbation,
+      finalVehicles: sim.getState().vehicles.map((v) => ({ ...v })),
     };
   }
 
@@ -254,7 +258,11 @@ export class ExperimentRunner {
       for (let t = 0; t < config.trialsPerCount; t++) {
         if (shouldCancel && shouldCancel()) break;
 
-        const seed = config.baseSeed + t * 7919; // Distinct deterministic prime seed spacing
+        // Controlled Comparative Design (Common Random Numbers):
+        // Each trial index t across all density levels shares the identical deterministic seed.
+        // This isolates vehicle density as the primary experimental variable by matching initial
+        // micro-perturbation profiles across density configurations.
+        const seed = config.baseSeed + t * 7919;
 
         const trialResult = this.runSingleTrial({
           roadLength: config.roadLength,
@@ -336,9 +344,9 @@ export class ExperimentRunner {
   ): CriticalDensityWindow | null {
     if (groups.length < 2) return null;
 
-    let lower: number | null = null;
-    let upper: number | null = null;
     let crossing: number | null = null;
+    let crossingLower: number | null = null;
+    let crossingUpper: number | null = null;
 
     // Find crossing of 50% probability via linear interpolation
     for (let i = 0; i < groups.length - 1; i++) {
@@ -346,6 +354,8 @@ export class ExperimentRunner {
       const g2 = groups[i + 1];
 
       if (g1.jamProbability <= 0.5 && g2.jamProbability >= 0.5) {
+        crossingLower = g1.densityVehPerKm;
+        crossingUpper = g2.densityVehPerKm;
         const dP = g2.jamProbability - g1.jamProbability;
         if (dP > 0) {
           const frac = (0.5 - g1.jamProbability) / dP;
@@ -357,18 +367,10 @@ export class ExperimentRunner {
       }
     }
 
-    // Find first group with P >= 0.20
-    const firstNonZero = groups.find((g) => g.jamProbability >= 0.2);
-    if (firstNonZero) lower = firstNonZero.densityVehPerKm;
-
-    // Find first group with P >= 0.80
-    const firstHigh = groups.find((g) => g.jamProbability >= 0.8);
-    if (firstHigh) upper = firstHigh.densityVehPerKm;
-
-    if (crossing !== null && lower !== null && upper !== null) {
+    if (crossing !== null && crossingLower !== null && crossingUpper !== null) {
       return {
-        lowerVehPerKm: Math.round(lower * 10) / 10,
-        upperVehPerKm: Math.round(upper * 10) / 10,
+        lowerVehPerKm: Math.round(crossingLower * 10) / 10,
+        upperVehPerKm: Math.round(crossingUpper * 10) / 10,
         crossingVehPerKm: Math.round(crossing * 10) / 10,
       };
     }

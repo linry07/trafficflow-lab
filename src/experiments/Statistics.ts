@@ -2,10 +2,18 @@
  * Statistics — Rigorous statistical estimation for traffic simulation experiments.
  *
  * Implements:
- *   1. Wilson Score Confidence Interval for binomial proportions (e.g. jam probability).
- *      Provides accurate coverage even with small sample sizes (n < 30) or extreme probabilities
- *      (k = 0 or k = n) where standard normal approximations fail.
- *   2. Sample mean, sample variance, standard deviation, and standard error.
+ *   1. Wilson Score Confidence Interval for binomial proportions.
+ *      Provides accurate coverage even with small sample sizes (n < 30) or extreme proportions
+ *      (k = 0 or k = n) where standard normal approximations (Wald intervals) fail.
+ *
+ *      METHODOLOGICAL NOTE ON DETERMINISTIC SIMULATIONS:
+ *      In this platform, car-following physics is governed by deterministic IDM differential equations.
+ *      The random seed controls initial micro-perturbations around equilibrium speed.
+ *      The Wilson interval here reflects the estimated probability that a random initial perturbation
+ *      configuration develops into sustained congestion for a given density, bounded by the finite sample
+ *      size of seeds tested. It should not be confused with observation noise in a physical sensor system.
+ *
+ *   2. Sample mean, unbiased sample variance, standard deviation, and standard error.
  */
 
 export interface ConfidenceInterval {

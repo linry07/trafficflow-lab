@@ -81,6 +81,7 @@ export const DEFAULT_CONFIG: Readonly<SimulationConfig> = {
 /**
  * Preset: Stable traffic.
  * Low density where disturbances dissipate and vehicles return to steady flow.
+ * Assumes a homogeneous driver population following standard IDM parameters.
  */
 export const PRESET_STABLE: Readonly<SimulationConfig> = {
   ...DEFAULT_CONFIG,
@@ -91,6 +92,7 @@ export const PRESET_STABLE: Readonly<SimulationConfig> = {
 /**
  * Preset: Unstable traffic.
  * Higher density where a small disturbance grows into persistent stop-and-go waves.
+ * Assumes a homogeneous driver population following standard IDM parameters.
  */
 export const PRESET_UNSTABLE: Readonly<SimulationConfig> = {
   ...DEFAULT_CONFIG,
@@ -99,9 +101,13 @@ export const PRESET_UNSTABLE: Readonly<SimulationConfig> = {
 };
 
 /**
- * Preset: Variable Speed Limit (Intervention).
- * High density (35 veh/km) that is normally unstable at 120 km/h,
- * but lowering desired speed to 80 km/h (22.2 m/s) stabilizes string dynamics.
+ * Preset: Reduced Speed Limit Scenario (Static 80 km/h).
+ * At high density (35 veh/km), lowering desired cruising speed to 80 km/h (22.2 m/s)
+ * mathematically reduces the required steady-state gap s* = s0 + v·T, keeping traffic
+ * below string instability in this model.
+ *
+ * NOTE: This models a static lower speed environment across the ring. It is not an active,
+ * feedback-controlled dynamic Variable Speed Limit (VSL) control system.
  */
 export const PRESET_SPEED_LIMIT: Readonly<SimulationConfig> = {
   ...DEFAULT_CONFIG,
@@ -114,9 +120,12 @@ export const PRESET_SPEED_LIMIT: Readonly<SimulationConfig> = {
 };
 
 /**
- * Preset: Connected / Autonomous Vehicles (CAV Platoon).
- * 35 vehicles operating with small time headway (0.8s) and 1.5m standstill gap,
- * demonstrating how automated following maintains stable laminar flow at high capacity.
+ * Preset: Idealized Low Headway (T = 0.8s).
+ * Simulates the effect of reduced following headway (0.8s) and standstill gap (1.5m).
+ *
+ * NOTE: This models an idealized car-following scenario with tight headway. It uses standard
+ * single-leader IDM and does NOT implement Vehicle-to-Vehicle (V2V) wireless communication,
+ * multi-anticipation, or Cooperative Adaptive Cruise Control (CACC) mesh protocols.
  */
 export const PRESET_AUTONOMOUS: Readonly<SimulationConfig> = {
   ...DEFAULT_CONFIG,
@@ -157,28 +166,28 @@ export type PresetKey =
 
 export const SIMULATION_PRESETS: Record<PresetKey, { name: string; description: string; config: SimulationConfig }> = {
   stable: {
-    name: '🟢 Stable (15 cars)',
+    name: '🟢 Low Density Baseline (15 cars)',
     description: '15 veh/km: Low density where perturbations dissipate smoothly.',
     config: PRESET_STABLE,
   },
   unstable: {
-    name: '🔴 Unstable (40 cars)',
-    description: '40 veh/km: Small disturbances amplify into persistent backward stop-and-go waves.',
+    name: '🔴 High Density Baseline (40 cars)',
+    description: '40 veh/km: High density where small disturbances amplify into persistent backward stop-and-go waves.',
     config: PRESET_UNSTABLE,
   },
   'speed-limit': {
-    name: '🟡 Speed Limit 80 km/h',
-    description: '35 veh/km: Reduced speed limit stabilizes dense traffic by shortening headway requirement.',
+    name: '🟡 Reduced Speed Limit (80 km/h, 35 cars)',
+    description: '35 veh/km: Static lower speed limit reduces required headway, maintaining stability in this IDM formulation.',
     config: PRESET_SPEED_LIMIT,
   },
   autonomous: {
-    name: '🤖 CAV Platoon (T=0.8s)',
-    description: '35 veh/km: Connected / autonomous vehicles maintain laminar flow at high capacity.',
+    name: '🤖 Idealized Low Headway (T=0.8s, 35 cars)',
+    description: '35 veh/km: Idealized automated car-following with 0.8s headway maintains uniform spacing at lower gap requirements.',
     config: PRESET_AUTONOMOUS,
   },
   aggressive: {
-    name: '⚡ Aggressive / Tailgating',
-    description: '30 veh/km: 140 km/h with short 0.7s headway produces violent shockwaves.',
+    name: '⚡ Aggressive Driving (140 km/h, T=0.7s, 30 cars)',
+    description: '30 veh/km: High cruising speed and short headway amplify perturbations into rapid stop-and-go waves.',
     config: PRESET_AGGRESSIVE,
   },
 };

@@ -55,10 +55,20 @@ describe('ExperimentRunner — Headless Simulation & Parameter Sweeps', () => {
       sim.step(0.05);
     }
 
-    // Positions and speeds must match to floating-point precision
+    // Positions, speeds, and accelerations must match to floating-point precision
     const simState = sim.getState();
-    expect(simState.vehicles.length).toBe(trial.vehicleCount);
+    expect(trial.finalVehicles).toBeDefined();
+    expect(simState.vehicles.length).toBe(trial.finalVehicles!.length);
     expect(simState.time).toBeCloseTo(30, 2);
+
+    for (let i = 0; i < simState.vehicles.length; i++) {
+      const simV = simState.vehicles[i];
+      const trialV = trial.finalVehicles![i];
+      expect(simV.id).toBe(trialV.id);
+      expect(simV.position).toBeCloseTo(trialV.position, 5);
+      expect(simV.speed).toBeCloseTo(trialV.speed, 5);
+      expect(simV.acceleration).toBeCloseTo(trialV.acceleration, 5);
+    }
   });
 
   it('executes a multi-density sweep with distinct deterministic seeds', () => {

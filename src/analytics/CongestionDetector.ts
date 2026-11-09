@@ -36,6 +36,8 @@ export interface CongestionDetectorConfig {
   warmupDuration?: number;
   /** Minimum duration in simulated seconds that congestion must persist to be classified as sustained (default 60s) */
   minJamDuration?: number;
+  /** Grace period in seconds to tolerate brief threshold dips during wave oscillation before resetting jam duration (default 3.0s) */
+  jamClearGracePeriod?: number;
 }
 
 export interface CongestionAnalysisResult {
@@ -64,6 +66,7 @@ export class CongestionDetector {
   readonly varianceThreshold: number;
   readonly warmupDuration: number;
   readonly minJamDuration: number;
+  readonly jamClearGracePeriod: number;
 
   constructor(config: CongestionDetectorConfig) {
     this.v0 = config.v0;
@@ -72,6 +75,7 @@ export class CongestionDetector {
     this.varianceThreshold = config.varianceThreshold ?? 3.0; // (m/s)²
     this.warmupDuration = config.warmupDuration ?? 120;
     this.minJamDuration = config.minJamDuration ?? 60;
+    this.jamClearGracePeriod = config.jamClearGracePeriod ?? 3.0;
   }
 
   /**
@@ -116,18 +120,21 @@ export class CongestionDetector {
     const evaluatedDuration =
       postWarmup[postWarmup.length - 1].time - postWarmup[0].time;
 
-    // 2. Track contiguous durations of stop-and-go congestion
+    // 2. Track contiguous durations of stop-and-go congestion with hysteresis debouncing
     let maxContiguousJamDuration = 0;
     let currentContiguousJamDuration = 0;
+    let currentLapseDuration = 0;
     let peakCongestion = 0;
     let sumSpeed = 0;
     let sumFlow = 0;
     let sumVariance = 0;
     let anyCongestionObserved = false;
+    const gracePeriod = this.jamClearGracePeriod;
 
     for (let i = 0; i < postWarmup.length; i++) {
       const pt = postWarmup[i];
       const m = pt.metrics;
+      const dtSample = i > 0 ? pt.time - postWarmup[i - 1].time : 0;
 
       sumSpeed += m.averageSpeed;
       sumFlow += m.flow;
@@ -148,15 +155,17 @@ export class CongestionDetector {
         m.speedVariance >= this.varianceThreshold;
 
       if (isStopAndGo) {
-        const dtSample =
-          i > 0 ? pt.time - postWarmup[i - 1].time : 0;
+        currentLapseDuration = 0;
         currentContiguousJamDuration += dtSample;
         if (currentContiguousJamDuration > maxContiguousJamDuration) {
           maxContiguousJamDuration = currentContiguousJamDuration;
         }
       } else {
-        // Reset contiguous counter if traffic clears or returns to laminar flow
-        currentContiguousJamDuration = 0;
+        // Hysteresis: only reset contiguous jam progress if clearance persists beyond grace period
+        currentLapseDuration += dtSample;
+        if (currentLapseDuration > gracePeriod) {
+          currentContiguousJamDuration = 0;
+        }
       }
     }
 

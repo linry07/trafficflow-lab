@@ -15,3 +15,9 @@ export {
   computeMeanAndStdDev,
 } from './Statistics';
 export type { ConfidenceInterval } from './Statistics';
+
+export { ExperimentWorkerManager } from './ExperimentWorkerManager';
+export type {
+  ExperimentWorkerCallbacks,
+  WorkerFactory,
+} from './ExperimentWorkerManager';

@@ -107,4 +107,28 @@ describe('CongestionDetector — Scientific Regime Classification', () => {
     expect(result.regime).toBe('free-flow');
     expect(result.maxCongestionFraction).toBe(0);
   });
+
+  it('debounces brief momentary fluctuations during a sustained wave without prematurely resetting the timer', () => {
+    // 70 seconds total wave from t=130 to t=200, but with a 1-second dip at t=160
+    const history = [];
+    for (let t = 0; t <= 240; t += 1.0) {
+      if (t >= 130 && t <= 200) {
+        if (t === 160) {
+          // 1-second brief fluctuation below threshold
+          history.push(createSample(t, 20.0, 2.5, 0.10));
+        } else {
+          // Active stop-and-go wave
+          history.push(createSample(t, 12.0, 8.0, 0.30));
+        }
+      } else {
+        history.push(createSample(t, 28.0, 0.5, 0.0));
+      }
+    }
+
+    const result = detector.analyze(history);
+    // The brief 1s fluctuation should be debounced by the 3s grace period
+    expect(result.isSustainedJam).toBe(true);
+    expect(result.regime).toBe('sustained-jam');
+    expect(result.sustainedJamDuration).toBeGreaterThanOrEqual(60);
+  });
 });
