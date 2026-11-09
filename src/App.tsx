@@ -2,11 +2,10 @@
  * TrafficFlow Lab — Main Application View
  *
  * Microscopic traffic flow simulator and computational experimentation platform:
- *   - Circular highway canvas visualization
- *   - Interactive controls (playback, speed, live behavior, structural params)
- *   - Real-time macroscopic metrics (avg speed, density, flow, congestion %)
- *   - Space-Time diagram (Kessel wave propagation plot)
- *   - Real-time time-series charts (Speed, Congestion %, Traffic Flow)
+ *   - Compact header (60-72px) with branding, live status, and Science Guide
+ *   - Five compact real-time macroscopic metrics (avg speed, density, flow, congestion %, time)
+ *   - Primary workspace: circular highway simulation (~430px) side-by-side with compact control sidebar
+ *   - Tabbed analytics workspace below (Live Charts, Space-Time Diagram, Automatic Experiments)
  *   - Automatic Experiment Discovery Engine with Web Worker density sweeps and Wilson CI
  *   - One-click reproducible scenario replay
  */
@@ -18,9 +17,7 @@ import { Header } from './components/Header';
 import { SimulationCanvas } from './components/SimulationCanvas';
 import { MetricsPanel } from './components/MetricsPanel';
 import { ControlPanel } from './components/ControlPanel';
-import { SpaceTimePanel } from './components/SpaceTimePanel';
-import { ChartsPanel } from './components/ChartsPanel';
-import { ExperimentPanel } from './components/ExperimentPanel';
+import { AnalyticsWorkspace } from './components/AnalyticsWorkspace';
 import { ScienceGuideModal } from './components/ScienceGuideModal';
 import { TrialResult } from './experiments/ExperimentRunner';
 
@@ -69,16 +66,8 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        background: '#0b1120',
-        color: '#f8fafc',
-      }}
-    >
-      {/* Top Header */}
+    <div className="app-container">
+      {/* 1. Compact Header */}
       <Header
         seed={config.seed}
         roadLength={config.roadLength}
@@ -97,10 +86,10 @@ export const App: React.FC = () => {
       <main
         style={{
           flex: 1,
-          padding: '20px 24px',
+          padding: '14px 20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '24px',
+          gap: '14px',
           maxWidth: '1600px',
           width: '100%',
           margin: '0 auto',
@@ -108,19 +97,7 @@ export const App: React.FC = () => {
       >
         {/* Replay Notice Banner */}
         {activeReplayTrial && (
-          <div
-            style={{
-              background: 'rgba(2, 132, 199, 0.15)',
-              border: '1px solid #0284c7',
-              borderRadius: '8px',
-              padding: '10px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '12px',
-              color: '#38bdf8',
-            }}
-          >
+          <div className="replay-banner">
             <span>
               ▶ <strong>Replaying Experiment Scenario:</strong> {activeReplayTrial.vehicleCount} vehicles ({activeReplayTrial.densityVehPerKm} veh/km), Seed #{activeReplayTrial.seed}
               {activeReplayTrial.perturbation && (
@@ -137,6 +114,7 @@ export const App: React.FC = () => {
                 color: '#94a3b8',
                 cursor: 'pointer',
                 fontSize: '12px',
+                padding: '2px 6px',
               }}
             >
               ✕ Dismiss
@@ -144,7 +122,7 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* 1. Key Metrics Readout */}
+        {/* 2. Compact Real-time Macroscopic Metrics */}
         <section aria-label="Real-time traffic metrics">
           <MetricsPanel
             metrics={state.metrics}
@@ -154,24 +132,14 @@ export const App: React.FC = () => {
           />
         </section>
 
-        {/* 2. Primary Simulation Viewport: Circular Road & Controls */}
+        {/* 3. Primary Simulation Viewport: Circular Road (~430px) & Compact Control Sidebar */}
         <section
           ref={canvasSectionRef}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(400px, 1fr) 380px',
-            gap: '20px',
-            alignItems: 'start',
-          }}
+          aria-label="Simulation workspace"
+          className="workspace-grid"
         >
-          {/* Circular Road Canvas */}
-          <div
-            style={{
-              height: '600px',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
+          {/* Circular Road Canvas Viewport */}
+          <div className="simulation-column">
             <SimulationCanvas
               vehicles={state.vehicles}
               roadLength={config.roadLength}
@@ -181,7 +149,7 @@ export const App: React.FC = () => {
             />
           </div>
 
-          {/* Interactive Control Panel */}
+          {/* Compact Interactive Control Sidebar */}
           <div>
             <ControlPanel
               config={config}
@@ -208,56 +176,43 @@ export const App: React.FC = () => {
           </div>
         </section>
 
-        {/* 3. Automatic Experiment Discovery Engine (Phase 3 Core Feature) */}
-        <section aria-label="Automatic experiment discovery engine">
-          <ExperimentPanel
-            isRunning={isExperimentRunning}
-            progress={experimentProgress}
-            results={experimentResults}
-            error={experimentError}
+        {/* 4. Tabbed Analytics Workspace (Live Charts, Space-Time Diagram, Experiments) */}
+        <section aria-label="Analytics and experimentation workspace">
+          <AnalyticsWorkspace
+            timeSeriesData={timeSeriesData}
+            v0={config.idm.v0}
+            simTime={state.time}
+            spaceTimeSlices={spaceTimeSlices}
+            roadLength={config.roadLength}
+            spaceTimeWindow={spaceTimeWindow}
+            onTimeWindowChange={setSpaceTimeWindow}
+            isExperimentRunning={isExperimentRunning}
+            experimentProgress={experimentProgress}
+            experimentResults={experimentResults}
+            experimentError={experimentError}
             onStartExperiment={startExperiment}
             onCancelExperiment={cancelExperiment}
             onReplayTrial={handleReplayTrial}
           />
         </section>
 
-        {/* 4. Space-Time Wave Propagation Diagram */}
-        <section aria-label="Space-time traffic wave propagation">
-          <SpaceTimePanel
-            slices={spaceTimeSlices}
-            roadLength={config.roadLength}
-            v0={config.idm.v0}
-            selectedWindow={spaceTimeWindow}
-            onTimeWindowChange={setSpaceTimeWindow}
-          />
-        </section>
-
-        {/* 5. Time-Series Analytics (Speed, Congestion %, Flow Q) */}
-        <section aria-label="Time-series analytics charts">
-          <ChartsPanel
-            data={timeSeriesData}
-            v0={config.idm.v0}
-            time={state.time}
-          />
-        </section>
-
-        {/* 6. Scientific Summary & Educational Explanation */}
+        {/* 5. Scientific Summary & Educational Reference */}
         <footer
           style={{
-            background: '#0f172a',
+            background: '#090e1a',
             border: '1px solid #1e293b',
-            borderRadius: '10px',
-            padding: '16px 20px',
-            fontSize: '12px',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            fontSize: '11px',
             color: '#94a3b8',
-            lineHeight: 1.6,
+            lineHeight: 1.5,
           }}
         >
           <div
             style={{
               fontWeight: 700,
               color: '#f8fafc',
-              marginBottom: '6px',
+              marginBottom: '4px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
@@ -265,14 +220,13 @@ export const App: React.FC = () => {
           >
             <span>🔬</span> Emergent Jam Dynamics &amp; Intelligent Driver Model (IDM)
           </div>
-          <p style={{ margin: '0 0 8px 0' }}>
-            In a single-lane circular highway with periodic boundaries, traffic jams can emerge entirely without accidents, lane reductions, or external obstacles.
-            When vehicle density exceeds a critical threshold, small individual speed perturbations fail to dissipate and instead propagate backward as a shockwave,
-            creating a persistent <strong>phantom traffic jam</strong>.
+          <p style={{ margin: '0 0 4px 0' }}>
+            In a single-lane circular highway with periodic boundaries, traffic jams emerge without accidents, lane reductions, or external obstacles.
+            When vehicle density exceeds the critical threshold (&asymp; 27.5 veh/km), individual braking fluctuations amplify backward along the loop,
+            spontaneously forming stop-and-go shockwaves.
           </p>
           <p style={{ margin: 0, color: '#64748b' }}>
-            Use the <strong>Automatic Experiment Discovery Engine</strong> above to empirically determine where your specific driver population transitions from laminar free flow into persistent stop-and-go waves.
-            Each trial can be immediately replayed in the circular highway visualization above.
+            Use the <strong>Experiments</strong> tab above to run headless multi-seed density sweeps and compute 95% Wilson Score confidence intervals, or observe backward-moving wave worldlines in the <strong>Space-Time Diagram</strong> tab.
           </p>
         </footer>
       </main>

@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb?logo=react)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)](https://vitejs.dev/)
-[![Vitest](https://img.shields.io/badge/Tests-185%20Passing-brightgreen?logo=vitest)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-191%20Passing-brightgreen?logo=vitest)](https://vitest.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
@@ -118,6 +118,7 @@ src/
 │   ├── SimulationCanvas.tsx     # High-DPI, responsive canvas with ResizeObserver
 │   ├── ControlPanel.tsx         # Playback, live params (v0, T), structural reset, presets
 │   ├── MetricsPanel.tsx         # Real-time telemetry cards
+│   ├── AnalyticsWorkspace.tsx   # Tabbed analytics (Live Charts, Space-Time, Experiments)
 │   ├── ChartsPanel.tsx          # Recharts real-time macroscopic time-series & CSV export
 │   ├── SpaceTimePanel.tsx       # Spatiotemporal kymograph canvas controls
 │   ├── ExperimentPanel.tsx      # Density sweep config, Wilson CI chart, replay table
@@ -210,7 +211,7 @@ npm run dev
 Open your browser at `http://localhost:5173` to interact with the simulation.
 
 ### Running Test Suite
-TrafficFlow Lab includes **185 comprehensive unit and integration tests** validating numerical integration, physics invariants, collision avoidance, and statistical estimators:
+TrafficFlow Lab includes **191 comprehensive unit and integration tests** validating numerical integration, physics invariants, collision avoidance, and statistical estimators:
 ```bash
 npm test
 ```

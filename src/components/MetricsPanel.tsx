@@ -35,14 +35,7 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
   const congestionPct = metrics.congestionFraction * 100;
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '12px',
-        width: '100%',
-      }}
-    >
+    <div className="metrics-row">
       {/* 1. Average Speed */}
       <MetricCard
         label="Average Speed"
@@ -114,89 +107,23 @@ const MetricCard: React.FC<MetricCardProps> = ({
   tooltip,
 }) => {
   return (
-    <div
-      title={tooltip}
-      style={{
-        background: '#131c2e',
-        border: '1px solid #1e293b',
-        borderRadius: '10px',
-        padding: '14px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
+    <div className="metric-card-compact" title={tooltip}>
       {/* Top accent bar */}
       <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '2px',
-          background: accentColor,
-        }}
+        className="metric-card-accent-bar"
+        style={{ background: accentColor }}
       />
 
-      <div
-        style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-          color: '#94a3b8',
-          marginBottom: '6px',
-        }}
-      >
-        {label}
+      <div className="metric-card-header">
+        <span>{label}</span>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: '4px',
-          margin: '2px 0',
-        }}
-      >
-        <span
-          style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: '#f8fafc',
-            fontVariantNumeric: 'tabular-nums',
-            fontFamily:
-              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-          }}
-        >
-          {value}
-        </span>
-        {unit && (
-          <span
-            style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              color: '#64748b',
-            }}
-          >
-            {unit}
-          </span>
-        )}
+      <div className="metric-card-value-group">
+        <span className="metric-card-value">{value}</span>
+        {unit && <span className="metric-card-unit">{unit}</span>}
       </div>
 
-      <div
-        style={{
-          fontSize: '11px',
-          color: '#64748b',
-          marginTop: '4px',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {subtext}
-      </div>
+      <div className="metric-card-footer">{subtext}</div>
     </div>
   );
 };

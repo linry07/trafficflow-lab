@@ -76,3 +76,621 @@ input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* ==========================================================================
+   TrafficFlow Lab — Modern Scientific Workspace Theme & Responsive Layout
+   ========================================================================== */
+
+/* App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: #0b1120;
+  color: #f8fafc;
+}
+
+/* 1. Compact Header (Target 60-72px on desktop) */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background-color: #090e1a;
+  border-bottom: 1px solid #1e293b;
+  min-height: 64px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0284c7 0%, #3b82f6 100%);
+  font-size: 18px;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+  flex-shrink: 0;
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-app-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.header-engine-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #334155;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.header-tagline {
+  margin: 0;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.2;
+}
+
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.header-tech-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #131c2e;
+  border: 1px solid #1e293b;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #cbd5e1;
+}
+
+.header-tech-chip .chip-label {
+  color: #64748b;
+  font-family: sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.header-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.header-status-badge.running {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+
+.header-status-badge.paused {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.header-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.header-status-badge.running .header-status-dot {
+  background: #22c55e;
+}
+
+.header-status-badge.paused .header-status-dot {
+  background: #f59e0b;
+}
+
+.header-guide-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #0284c7;
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+  color: #f0f9ff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  transition: all 0.15s ease;
+}
+
+.header-guide-btn:hover {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  transform: translateY(-1px);
+}
+
+/* 2. Compact Metrics Bar (Target 80-95px height on desktop) */
+.metrics-row {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.metric-card-compact {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  min-height: 82px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.15s ease;
+}
+
+.metric-card-compact:hover {
+  border-color: #334155;
+}
+
+.metric-card-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.metric-card-header {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-card-value-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 1px 0;
+}
+
+.metric-card-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  line-height: 1.1;
+}
+
+.metric-card-unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.metric-card-footer {
+  font-size: 10px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 3. Primary Workspace Grid (Simulation + Sidebar) */
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.85fr) minmax(320px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.simulation-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.simulation-viewport {
+  position: relative;
+  width: 100%;
+  height: 430px;
+  min-height: 380px;
+  max-height: 460px;
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* 4. Compact Control Sidebar */
+.control-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: #f8fafc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.control-playback-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary-play {
+  flex: 1 1 auto;
+  min-width: 90px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-primary-play.running {
+  background: #ef4444;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+.btn-primary-play.running:hover {
+  background: #dc2626;
+}
+
+.btn-primary-play.paused {
+  background: #22c55e;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
+}
+
+.btn-primary-play.paused:hover {
+  background: #16a34a;
+}
+
+.btn-control-secondary {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-control-secondary:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.btn-perturb {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #0284c7;
+  background: #0369a1;
+  color: #f0f9ff;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+  transition: all 0.15s ease;
+}
+
+.btn-perturb:hover {
+  background: #0284c7;
+}
+
+.control-speed-preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.speed-selector-group {
+  display: flex;
+  background: #1e293b;
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid #334155;
+}
+
+.speed-selector-btn {
+  flex: 1;
+  padding: 4px 0;
+  border-radius: 4px;
+  border: none;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-selector-btn.active {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.speed-selector-btn.inactive {
+  background: transparent;
+  color: #94a3b8;
+}
+
+.speed-selector-btn.inactive:hover {
+  color: #f8fafc;
+}
+
+.preset-dropdown {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.preset-dropdown:focus {
+  border-color: #38bdf8;
+}
+
+/* Collapsible Section Styling */
+.collapsible-card {
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.collapsible-card:hover {
+  border-color: #334155;
+}
+
+.collapsible-trigger-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #131c2e;
+  border: none;
+  color: #f8fafc;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s ease;
+}
+
+.collapsible-trigger-btn:hover {
+  background: #1a253a;
+}
+
+.collapsible-content {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 5. Tabbed Analytics Workspace */
+.analytics-workspace {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  width: 100%;
+}
+
+.analytics-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #090e1a;
+  border-bottom: 1px solid #1e293b;
+  overflow-x: auto;
+}
+
+.analytics-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.analytics-tab-btn:hover {
+  color: #f8fafc;
+  background: #131c2e;
+}
+
+.analytics-tab-btn.active {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #334155;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.analytics-tab-panel {
+  padding: 16px;
+}
+
+/* Replay scenario notice banner */
+.replay-banner {
+  background: rgba(2, 132, 199, 0.15);
+  border: 1px solid #0284c7;
+  border-radius: 8px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #38bdf8;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/* Tablet (768px - 1199px) */
+@media (max-width: 1199px) {
+  .metrics-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workspace-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr);
+    gap: 12px;
+  }
+
+  .simulation-viewport {
+    height: 390px;
+    min-height: 340px;
+  }
+}
+
+/* Stacking on smaller tablets & mobile (< 960px) */
+@media (max-width: 960px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .simulation-viewport {
+    height: 380px;
+    max-height: 400px;
+  }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
+  .app-header {
+    padding: 8px 16px;
+    min-height: auto;
+  }
+
+  .header-tagline {
+    display: none; /* Hide subtitle on compact mobile view */
+  }
+
+  .header-tech-chip {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-card-compact:last-child {
+    grid-column: span 2;
+  }
+
+  .simulation-viewport {
+    height: 340px;
+    min-height: 300px;
+  }
+
+  .control-speed-preset-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-tab-bar {
+    padding: 6px 8px;
+  }
+
+  .analytics-tab-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .analytics-tab-panel {
+    padding: 12px;
+  }
+}

@@ -91,10 +91,11 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
     // 3. Compute road geometry
     const cx = width / 2;
     const cy = height / 2;
-    // Keep road comfortably within bounds with padding
+    // Constrain road circle diameter to ~350-420px on desktop while scaling cleanly on mobile
     const minDim = Math.min(width, height);
-    const radius = Math.max(90, minDim * 0.38);
-    const laneWidth = Math.max(24, Math.min(38, radius * 0.16));
+    const targetDiameter = Math.min(390, Math.max(240, minDim * 0.84));
+    const radius = targetDiameter / 2;
+    const laneWidth = Math.max(20, Math.min(28, radius * 0.14));
 
     // 4. Render circular road
     RoadRenderer.render(ctx, {
@@ -125,17 +126,7 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
   return (
     <div
       ref={containerRef}
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        minHeight: '380px',
-        overflow: 'hidden',
-        borderRadius: '12px',
-        background: '#090d16',
-        border: '1px solid #1e293b',
-        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5)',
-      }}
+      className="simulation-viewport"
     >
       <canvas
         ref={canvasRef}
