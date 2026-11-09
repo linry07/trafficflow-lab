@@ -23,11 +23,23 @@
 3. Switch to **Space-Time Diagram** to see how the disturbance propagates.
 4. Open **Experiments** and launch a density sweep. Select a trial to replay it.
 
-## Screenshot: Simulation controls
+## See it in action
+
+### Live simulation and controls
 
 ![Play, pause, perturbation, preset and driving-behavior controls](screenshots/control-panel.png)
 
-<!-- Future: add actual screenshots of the Space-Time Diagram and Experiments results after capturing them from the deployed application. -->
+### Space-time visualization
+
+![Actual TrafficFlow Lab space-time diagram showing speed-colored vehicle trajectories across road position and simulated time](screenshots/space-time-diagram.png)
+
+*Vehicle worldlines reveal how traffic disturbances travel through the circular highway. Green trajectories indicate faster traffic; amber and red show vehicles slowing down.*
+
+### Automatic experiment discovery
+
+![Actual TrafficFlow Lab experiment dashboard with density sweep inputs, jam probability curve, Wilson confidence intervals, and flow-speed comparison](screenshots/experiment-discovery.png)
+
+*Example 35-trial density sweep with repeated seeded runs. This capture estimates a transition near 22.5 vehicles/km for the selected settings; it is a model-specific result, not a universal physical constant.*
 
 ## How it works
 
