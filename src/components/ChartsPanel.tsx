@@ -397,7 +397,10 @@ const TabButton: React.FC<{
 
 const CustomTooltip: React.FC<{
   active?: boolean;
-  payload?: Array<{ value?: number | string }>;
+  payload?: Array<{
+    value?: number | string;
+    color?: string;
+  }>;
   label?: number;
   unit: string;
   labelName: string;
@@ -415,7 +418,7 @@ const CustomTooltip: React.FC<{
           boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
         }}
       >
-        <div style={{ color: '#94a3b8', marginBottom: '2px' }}>
+        <div style={{ color: payload[0].color ?? '#f8fafc', fontWeight: 700 }}>
           Time: <span style={{ color: '#f8fafc', fontWeight: 600 }}>{label}s</span>
         </div>
         <div style={{ color: payload[0].color, fontWeight: 700 }}>
