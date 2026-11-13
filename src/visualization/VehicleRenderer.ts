@@ -2,7 +2,8 @@
  * Canvas renderer for simulation vehicles.
  *
  * Maps 1D road positions onto the 2D circular track with proper heading alignment,
- * speed-dependent color coding, headlights/taillights, and perturbation highlights.
+ * speed-dependent color coding, headlights/taillights, perturbation highlights,
+ * and interactive inspector highlights (selected vehicle, leader, following gap arc).
  */
 
 import { Vehicle } from '../engine/Vehicle';
@@ -16,6 +17,9 @@ export interface VehicleRenderOptions {
   roadLength: number;
   v0: number;
   highlightVehicleId?: number | null;
+  selectedVehicleId?: number | null;
+  leaderVehicleId?: number | null;
+  followingGap?: number | null;
 }
 
 export class VehicleRenderer {
@@ -55,8 +59,18 @@ export class VehicleRenderer {
   ): void {
     if (vehicles.length === 0) return;
 
-    const { cx, cy, radius, laneWidth, roadLength, v0, highlightVehicleId } =
-      options;
+    const {
+      cx,
+      cy,
+      radius,
+      laneWidth,
+      roadLength,
+      v0,
+      highlightVehicleId,
+      selectedVehicleId,
+      leaderVehicleId,
+      followingGap,
+    } = options;
 
     // Dynamically size vehicles based on vehicle density and radius
     const circumference = 2 * Math.PI * radius;
@@ -68,6 +82,29 @@ export class VehicleRenderer {
 
     ctx.save();
 
+    // 1. Render relationship arc between selected car and leader if selected
+    if (
+      selectedVehicleId !== null &&
+      selectedVehicleId !== undefined &&
+      leaderVehicleId !== null &&
+      leaderVehicleId !== undefined &&
+      selectedVehicleId !== leaderVehicleId
+    ) {
+      this.renderRelationshipArc(
+        ctx,
+        vehicles,
+        selectedVehicleId,
+        leaderVehicleId,
+        followingGap,
+        cx,
+        cy,
+        radius,
+        laneWidth,
+        roadLength,
+      );
+    }
+
+    // 2. Render all vehicles
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i];
       const { x, y, angle } = this.positionToXY(
@@ -80,7 +117,12 @@ export class VehicleRenderer {
 
       // Tangent heading angle (clockwise motion)
       const heading = angle + Math.PI / 2;
-      const isHighlighted = highlightVehicleId === v.id;
+      const isPerturbed = highlightVehicleId === v.id;
+      const isSelected = selectedVehicleId === v.id;
+      const isLeader =
+        leaderVehicleId === v.id &&
+        selectedVehicleId !== null &&
+        selectedVehicleId !== v.id;
       const color = getSpeedColor(v.speed, v0);
 
       this.renderVehicle(
@@ -93,11 +135,86 @@ export class VehicleRenderer {
         color,
         v.speed,
         v0,
-        isHighlighted,
+        isPerturbed,
+        isSelected,
+        isLeader,
       );
     }
 
     ctx.restore();
+  }
+
+  /**
+   * Render subtle luminous connection arc along the road between selected vehicle and leader.
+   */
+  private static renderRelationshipArc(
+    ctx: CanvasRenderingContext2D,
+    vehicles: ReadonlyArray<Vehicle>,
+    selectedId: number,
+    leaderId: number,
+    followingGap: number | null | undefined,
+    cx: number,
+    cy: number,
+    radius: number,
+    laneWidth: number,
+    roadLength: number,
+  ): void {
+    const follower = vehicles.find((v) => v.id === selectedId);
+    const leader = vehicles.find((v) => v.id === leaderId);
+    if (!follower || !leader) return;
+
+    const startAngle = this.positionToAngle(follower.position, roadLength);
+    let endAngle = this.positionToAngle(leader.position, roadLength);
+
+    // Ensure startAngle < endAngle clockwise in [0, 2pi) range
+    while (endAngle <= startAngle) {
+      endAngle += Math.PI * 2;
+    }
+
+    // Arc along the circular track
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, endAngle, false);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+    ctx.lineWidth = Math.max(2, laneWidth * 0.18);
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.restore();
+
+    // If following gap is available, render a compact gap tag at the midpoint of the arc
+    if (followingGap !== null && followingGap !== undefined && followingGap > 0) {
+      const midAngle = startAngle + (endAngle - startAngle) / 2;
+      const labelRadius = radius + laneWidth * 0.85;
+      const labelX = cx + labelRadius * Math.cos(midAngle);
+      const labelY = cy + labelRadius * Math.sin(midAngle);
+
+      ctx.save();
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const text = `${followingGap.toFixed(1)}m gap`;
+      const textWidth = ctx.measureText(text).width;
+
+      // Small background badge
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.lineWidth = 1;
+      this.roundRect(
+        ctx,
+        labelX - textWidth / 2 - 4,
+        labelY - 7,
+        textWidth + 8,
+        14,
+        3,
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText(text, labelX, labelY);
+      ctx.restore();
+    }
   }
 
   /**
@@ -113,7 +230,9 @@ export class VehicleRenderer {
     color: string,
     speed: number,
     v0: number,
-    isHighlighted: boolean,
+    isPerturbed: boolean,
+    isSelected: boolean,
+    isLeader: boolean,
   ): void {
     ctx.save();
     ctx.translate(x, y);
@@ -123,11 +242,37 @@ export class VehicleRenderer {
     const halfW = width / 2;
     const cornerR = Math.min(halfW, 3.5);
 
-    // 1. Highlight halo for perturbed vehicle
-    if (isHighlighted) {
+    // 1a. Highlight halo for perturbed vehicle
+    if (isPerturbed) {
       ctx.beginPath();
       ctx.arc(0, 0, Math.max(length, width) + 4, 0, Math.PI * 2);
       ctx.strokeStyle = '#38bdf8'; // sky-400
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // 1b. Selected vehicle prominent highlight (luminous cyan glow ring)
+    if (isSelected) {
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(length, width) + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#38bdf8'; // sky-400
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(length, width) + 10, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // 1c. Immediate leader distinct highlight (amber dashed halo)
+    if (isLeader) {
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(length, width) + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f59e0b'; // amber-500
       ctx.lineWidth = 2;
       ctx.setLineDash([3, 3]);
       ctx.stroke();
@@ -144,9 +289,13 @@ export class VehicleRenderer {
     this.roundRect(ctx, -halfL, -halfW, length, width, cornerR);
     ctx.fill();
 
-    // 4. Subtle vehicle body border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.lineWidth = 1;
+    // 4. Vehicle body border
+    ctx.strokeStyle = isSelected
+      ? '#ffffff'
+      : isLeader
+        ? '#fbbf24'
+        : 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = isSelected ? 1.5 : 1;
     ctx.stroke();
 
     // 5. Headlights (facing forward, +X direction in rotated space)

@@ -43,3 +43,19 @@ export {
   computeAllMetrics,
 } from './metrics';
 export type { TrafficMetrics } from './metrics';
+
+export {
+  computeVehicleDiagnostics,
+  classifyDrivingState,
+  explainDrivingDecision,
+} from './VehicleDiagnostics';
+export type {
+  VehicleDiagnostics,
+  DrivingState,
+} from './VehicleDiagnostics';
+
+export { VehicleActivityTracker } from './VehicleActivityTracker';
+export type {
+  VehicleActivityEvent,
+  ActivityEventType,
+} from './VehicleActivityTracker';

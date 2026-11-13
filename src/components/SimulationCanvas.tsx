@@ -2,16 +2,22 @@
  * Responsive HTML5 Canvas component for the circular highway traffic simulation.
  *
  * Features:
- *   - Automatic High-DPI / Retina display scaling via window.devicePixelRatio
+ *   - Interactive vehicle inspection with hit detection on click/hover
+ *   - High-DPI / Retina display scaling via window.devicePixelRatio
  *   - Continuous responsive resizing via ResizeObserver
- *   - Decoupled rendering powered by RoadRenderer and VehicleRenderer
- *   - Subtle status overlays for paused state and perturbation cues
+ *   - Visual relationship highlights (selected car, leader, gap arc)
+ *   - Compact, responsive VehicleInspector overlay & drawer
+ *   - Keyboard navigation (Escape to deselect)
  */
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Vehicle } from '../engine/Vehicle';
 import { RoadRenderer } from '../visualization/RoadRenderer';
 import { VehicleRenderer } from '../visualization/VehicleRenderer';
+import { findVehicleAtCanvasCoord } from '../visualization/HitDetection';
+import { VehicleDiagnostics } from '../engine/VehicleDiagnostics';
+import { VehicleActivityEvent } from '../engine/VehicleActivityTracker';
+import { VehicleInspector } from './VehicleInspector';
 
 export interface SimulationCanvasProps {
   vehicles: ReadonlyArray<Vehicle>;
@@ -19,6 +25,10 @@ export interface SimulationCanvasProps {
   v0: number;
   isRunning: boolean;
   highlightedVehicleId: number | null;
+  selectedVehicleId: number | null;
+  onSelectVehicle: (id: number | null) => void;
+  selectedVehicleDiagnostics: VehicleDiagnostics | null;
+  selectedVehicleActivity: ReadonlyArray<VehicleActivityEvent>;
 }
 
 export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
@@ -27,12 +37,20 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
   v0,
   isRunning,
   highlightedVehicleId,
+  selectedVehicleId,
+  onSelectVehicle,
+  selectedVehicleDiagnostics,
+  selectedVehicleActivity,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+  const [isHoveringVehicle, setIsHoveringVehicle] = useState<boolean>(false);
 
-  // Monitor container size changes even when paused
+  // Monitor container size changes
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -41,7 +59,9 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
       const rect = container.getBoundingClientRect();
       const w = Math.max(300, Math.floor(rect.width));
       const h = Math.max(300, Math.floor(rect.height));
-      setDimensions(prev => (prev.width === w && prev.height === h ? prev : { width: w, height: h }));
+      setDimensions((prev) =>
+        prev.width === w && prev.height === h ? prev : { width: w, height: h },
+      );
     };
 
     updateSize();
@@ -58,6 +78,89 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
     }
   }, []);
 
+  // Keyboard shortcut: Escape to deselect
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onSelectVehicle(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onSelectVehicle]);
+
+  // Compute road geometry parameters
+  const getRoadGeometry = useCallback(() => {
+    const container = containerRef.current;
+    const rect = container ? container.getBoundingClientRect() : null;
+    const width = dimensions.width || (rect ? Math.max(300, Math.floor(rect.width)) : 400);
+    const height = dimensions.height || (rect ? Math.max(300, Math.floor(rect.height)) : 430);
+
+    const cx = width / 2;
+    const cy = height / 2;
+    const minDim = Math.min(width, height);
+    const targetDiameter = Math.min(390, Math.max(240, minDim * 0.84));
+    const radius = targetDiameter / 2;
+    const laneWidth = Math.max(20, Math.min(28, radius * 0.14));
+
+    return { width, height, cx, cy, radius, laneWidth };
+  }, [dimensions]);
+
+  // Canvas click handler
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    const { cx, cy, radius, laneWidth } = getRoadGeometry();
+
+    const hitVehicle = findVehicleAtCanvasCoord(clickX, clickY, vehicles, {
+      cx,
+      cy,
+      radius,
+      laneWidth,
+      roadLength,
+      hitPadding: 8,
+    });
+
+    if (hitVehicle) {
+      onSelectVehicle(hitVehicle.id);
+    } else {
+      // Clicking empty space deselects
+      onSelectVehicle(null);
+    }
+  };
+
+  // Canvas mouse move handler for hover indication
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    const { cx, cy, radius, laneWidth } = getRoadGeometry();
+
+    const hitVehicle = findVehicleAtCanvasCoord(clickX, clickY, vehicles, {
+      cx,
+      cy,
+      radius,
+      laneWidth,
+      roadLength,
+      hitPadding: 6,
+    });
+
+    setIsHoveringVehicle(hitVehicle !== null);
+  };
+
+  const handleCanvasMouseLeave = () => {
+    setIsHoveringVehicle(false);
+  };
+
   // Render on every state update or resize
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -67,10 +170,7 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Responsive dimensions
-    const rect = container.getBoundingClientRect();
-    const width = dimensions.width || Math.max(300, Math.floor(rect.width));
-    const height = dimensions.height || Math.max(300, Math.floor(rect.height));
+    const { width, height, cx, cy, radius, laneWidth } = getRoadGeometry();
 
     const dpr = window.devicePixelRatio || 1;
     if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
@@ -88,16 +188,7 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
     // 2. Subtle coordinate grid dots
     drawSubtleGrid(ctx, width, height);
 
-    // 3. Compute road geometry
-    const cx = width / 2;
-    const cy = height / 2;
-    // Constrain road circle diameter to ~350-420px on desktop while scaling cleanly on mobile
-    const minDim = Math.min(width, height);
-    const targetDiameter = Math.min(390, Math.max(240, minDim * 0.84));
-    const radius = targetDiameter / 2;
-    const laneWidth = Math.max(20, Math.min(28, radius * 0.14));
-
-    // 4. Render circular road
+    // 3. Render circular road
     RoadRenderer.render(ctx, {
       cx,
       cy,
@@ -106,7 +197,15 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
       roadLength,
     });
 
-    // 5. Render vehicles
+    // 4. Render vehicles and relationship highlights
+    const leaderId =
+      selectedVehicleDiagnostics && !selectedVehicleDiagnostics.isSingleVehicle
+        ? selectedVehicleDiagnostics.leaderId
+        : null;
+    const followingGap = selectedVehicleDiagnostics
+      ? selectedVehicleDiagnostics.gap
+      : null;
+
     VehicleRenderer.renderAll(ctx, vehicles, {
       cx,
       cy,
@@ -115,25 +214,38 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
       roadLength,
       v0,
       highlightVehicleId: highlightedVehicleId,
+      selectedVehicleId,
+      leaderVehicleId: leaderId,
+      followingGap,
     });
 
-    // 6. Center hub overlay (displays vehicle count and road length)
+    // 5. Center hub overlay (displays vehicle count and road length)
     renderCenterHub(ctx, cx, cy, vehicles.length, roadLength);
 
     ctx.restore();
-  }, [vehicles, roadLength, v0, isRunning, highlightedVehicleId, dimensions]);
+  }, [
+    vehicles,
+    roadLength,
+    v0,
+    isRunning,
+    highlightedVehicleId,
+    selectedVehicleId,
+    selectedVehicleDiagnostics,
+    getRoadGeometry,
+  ]);
 
   return (
-    <div
-      ref={containerRef}
-      className="simulation-viewport"
-    >
+    <div ref={containerRef} className="simulation-viewport">
       <canvas
         ref={canvasRef}
+        onClick={handleCanvasClick}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseLeave={handleCanvasMouseLeave}
         style={{
           display: 'block',
           width: '100%',
           height: '100%',
+          cursor: isHoveringVehicle ? 'pointer' : 'default',
         }}
       />
 
@@ -158,6 +270,7 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
             letterSpacing: '0.04em',
             textTransform: 'uppercase',
             pointerEvents: 'none',
+            zIndex: 10,
           }}
         >
           <span
@@ -194,6 +307,7 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
             boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)',
             pointerEvents: 'none',
             animation: 'fadeIn 0.2s ease-out',
+            zIndex: 10,
           }}
         >
           <span>⚡ Perturbed Car #{highlightedVehicleId}</span>
@@ -202,6 +316,24 @@ export const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
             Tracking disturbance wave...
           </span>
         </div>
+      )}
+
+      {/* Subtle selection prompt when no vehicle is selected */}
+      {selectedVehicleId === null && highlightedVehicleId === null && (
+        <div className="inspector-hint-badge">
+          <span className="hint-icon">🔍</span>
+          <span>Click any vehicle to inspect its behavior &amp; decisions</span>
+        </div>
+      )}
+
+      {/* Vehicle Inspector Overlay Drawer */}
+      {selectedVehicleId !== null && selectedVehicleDiagnostics && (
+        <VehicleInspector
+          diagnostics={selectedVehicleDiagnostics}
+          activityHistory={selectedVehicleActivity}
+          onClose={() => onSelectVehicle(null)}
+          isRunning={isRunning}
+        />
       )}
     </div>
   );

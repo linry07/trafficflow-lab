@@ -34,6 +34,10 @@ export const App: React.FC = () => {
     isRunning,
     speedMultiplier,
     highlightedVehicleId,
+    selectedVehicleId,
+    selectVehicle,
+    selectedVehicleDiagnostics,
+    selectedVehicleActivity,
     timeSeriesData,
     spaceTimeSlices,
     spaceTimeWindow,
@@ -146,6 +150,10 @@ export const App: React.FC = () => {
               v0={config.idm.v0}
               isRunning={isRunning}
               highlightedVehicleId={highlightedVehicleId}
+              selectedVehicleId={selectedVehicleId}
+              onSelectVehicle={selectVehicle}
+              selectedVehicleDiagnostics={selectedVehicleDiagnostics}
+              selectedVehicleActivity={selectedVehicleActivity}
             />
           </div>
 

@@ -13,6 +13,8 @@ import {
   DEFAULT_CONFIG,
   PresetKey,
   SIMULATION_PRESETS,
+  VehicleDiagnostics,
+  VehicleActivityEvent,
 } from '../engine';
 import {
   TimeSeriesCollector,
@@ -38,6 +40,12 @@ export interface UseSimulationReturn {
   speedMultiplier: number;
   /** Currently highlighted vehicle ID (for perturbation feedback) */
   highlightedVehicleId: number | null;
+  /** Currently selected vehicle ID for inspector, or null */
+  selectedVehicleId: number | null;
+  /** Live diagnostics for the currently selected vehicle */
+  selectedVehicleDiagnostics: VehicleDiagnostics | null;
+  /** Activity event history for the currently selected vehicle */
+  selectedVehicleActivity: ReadonlyArray<VehicleActivityEvent>;
   /** Recorded time-series analytics samples */
   timeSeriesData: ReadonlyArray<TimeSeriesPoint>;
   /** Recorded spatiotemporal slices for the space-time diagram */
@@ -49,6 +57,7 @@ export interface UseSimulationReturn {
   pause: () => void;
   togglePlay: () => void;
   setSpeedMultiplier: (speed: number) => void;
+  selectVehicle: (id: number | null) => void;
   reset: (customConfig?: SimulationConfig) => void;
   applyPreset: (preset: PresetKey) => void;
   updateLiveParam: (key: 'v0' | 'T', value: number) => void;
@@ -115,6 +124,9 @@ export function useSimulation(
     number | null
   >(null);
   const highlightTimeoutRef = useRef<number | null>(null);
+
+  // Inspector selection
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
 
   // Record initial state at t=0
   useEffect(() => {
@@ -203,6 +215,7 @@ export function useSimulation(
       setTimeSeriesData([...collectorRef.current.getPoints()]);
       setSpaceTimeSlices([...spaceTimeGridRef.current.getSlices()]);
       setHighlightedVehicleId(null);
+      setSelectedVehicleId(null);
     },
     [pendingConfig],
   );
@@ -304,6 +317,21 @@ export function useSimulation(
     pendingConfig.vehicleCount !== config.vehicleCount ||
     pendingConfig.seed !== config.seed;
 
+  const selectVehicle = useCallback((id: number | null) => {
+    setSelectedVehicleId(id);
+  }, []);
+
+  // Compute live diagnostics and activity history for selected vehicle
+  const selectedVehicleDiagnostics =
+    selectedVehicleId !== null
+      ? simRef.current.getVehicleDiagnostics(selectedVehicleId)
+      : null;
+
+  const selectedVehicleActivity =
+    selectedVehicleId !== null
+      ? simRef.current.getVehicleActivityHistory(selectedVehicleId)
+      : [];
+
   return {
     state,
     config,
@@ -312,6 +340,9 @@ export function useSimulation(
     isRunning,
     speedMultiplier,
     highlightedVehicleId,
+    selectedVehicleId,
+    selectedVehicleDiagnostics,
+    selectedVehicleActivity,
     timeSeriesData,
     spaceTimeSlices,
     spaceTimeWindow,
@@ -319,6 +350,7 @@ export function useSimulation(
     pause,
     togglePlay,
     setSpeedMultiplier,
+    selectVehicle,
     reset,
     applyPreset,
     updateLiveParam,

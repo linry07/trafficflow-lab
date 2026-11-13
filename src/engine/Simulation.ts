@@ -29,6 +29,14 @@ import { wrapPosition, computeGap, sortVehicles, getLeaderIndex } from './Road';
 import { IDMParams, SimulationConfig, DEFAULT_CONFIG } from './SimulationConfig';
 import { SeededRandom } from './SeededRandom';
 import { computeAllMetrics, TrafficMetrics } from './metrics';
+import {
+  VehicleDiagnostics,
+  computeVehicleDiagnostics,
+} from './VehicleDiagnostics';
+import {
+  VehicleActivityTracker,
+  VehicleActivityEvent,
+} from './VehicleActivityTracker';
 
 /**
  * Immutable snapshot of the simulation at a point in time.
@@ -53,6 +61,7 @@ export class Simulation {
   private stepCount: number;
   private config: SimulationConfig;
   private rng: SeededRandom;
+  private activityTracker: VehicleActivityTracker;
 
   constructor(config: SimulationConfig = DEFAULT_CONFIG) {
     this.config = { ...config, idm: { ...config.idm } };
@@ -60,6 +69,7 @@ export class Simulation {
     this.time = 0;
     this.stepCount = 0;
     this.rng = new SeededRandom(config.seed);
+    this.activityTracker = new VehicleActivityTracker();
     this.initialize();
   }
 
@@ -90,6 +100,7 @@ export class Simulation {
     }
 
     this.vehicles = sortVehicles(this.vehicles);
+    this.activityTracker.initialize(this.vehicles, this.config, this.time);
   }
 
   /**
@@ -162,6 +173,7 @@ export class Simulation {
 
     this.time += dt;
     this.stepCount++;
+    this.activityTracker.update(this.vehicles, this.time, this.config);
   }
 
   /**
@@ -297,5 +309,21 @@ export class Simulation {
    */
   getTime(): number {
     return this.time;
+  }
+
+  /**
+   * Compute live IDM diagnostics for a single vehicle.
+   */
+  getVehicleDiagnostics(vehicleId: number): VehicleDiagnostics | null {
+    return computeVehicleDiagnostics(vehicleId, this.vehicles, this.config);
+  }
+
+  /**
+   * Get recent driving activity events for a vehicle (up to 10 events, newest first).
+   */
+  getVehicleActivityHistory(
+    vehicleId: number,
+  ): ReadonlyArray<VehicleActivityEvent> {
+    return this.activityTracker.getHistory(vehicleId);
   }
 }
